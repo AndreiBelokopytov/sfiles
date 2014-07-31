@@ -17,7 +17,7 @@ module.exports = function (app) {
   };
 
   function createPublicUrl (fileName) {
-    return app.host + ':' + app.port + app.publicUrl + '/' + fileName;
+    return app.publicUrl + '/' + fileName;
   };
 
   function saveFile (src, callback) {
