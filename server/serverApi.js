@@ -38,31 +38,43 @@ module.exports = function (app) {
   };
 
   function resizeImage (srcPath, width, height, callback) {
-    var fileName = createUniqFileName(srcPath),
-      targetPath = createLocalPath(fileName);
-    gm(srcPath)
-    .resize(width, height)
-    .write(targetPath, function (err) {
-      if (err) {
-        callback(err);
-      } else {
-        callback(null, fileName, targetPath);
-      }
-    });
+    if (width && height) {
+      gm(srcPath)
+      .resize(width, height)
+      .write(srcPath, function (err) {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null);
+        }
+      });
+    } else {
+      callback(null);
+    }
+
   };
 
   function cropImage (srcPath, width, height, cropX, cropY, callback) {
-    var fileName = createUniqFileName(srcPath),
-      targetPath = createLocalPath(fileName);
-    gm(srcPath)
-    .crop(width, height, cropX, cropY)
-    .write(targetPath, function (err) {
-      if (err) {
-        callback(err);
-      } else {
-        callback(null, fileName, targetPath);
+    if (width && height) {
+      if (!cropX) {
+        cropX = 0;
       }
-    });
+      if (!cropY) {
+        cropY = 0;
+      }
+
+      gm(srcPath)
+      .crop(width, height, cropX, cropY)
+      .write(srcPath, function (err) {
+        if (err) {
+          callback(err);
+        } else {
+          callback(null);
+        }
+      });
+    } else {
+      callback(null);
+    }
   };
 
   var serverApi = {
@@ -86,6 +98,7 @@ module.exports = function (app) {
       if (req.files.length > 0) {
         var image = req.files[0],
           imageTypeRegex = /image\/\w+/;
+          console.log(req.body);
         if ( imageTypeRegex.test(image.type) ) {
           var 
             srcPath = image.path,
@@ -97,31 +110,27 @@ module.exports = function (app) {
             resizeH = req.body.resizeH,
             quality = req.body.quality || app.get('quality');
 
-          if (cropW && cropH && cropX && cropY) {
-            cropImage(srcPath, cropW, cropH, cropX, cropY, function (err, fileName, filePath) {
+          resizeImage(srcPath, resizeW, resizeH, function (err) {
+            if (err) {
+              console.log('ERROR: ' + err.message);
+              return res.json({error: app.errorCodes.internalServerError});
+            }
+            cropImage(srcPath, cropW, cropH, cropX, cropY, function (err) {
               if (err) {
                 console.log('ERROR: ' + err.message);
                 return res.json({error: app.errorCodes.internalServerError});
               }
-              return res.json({imageUrl: createPublicUrl(fileName)}); 
+              saveFile(srcPath, function (err, fileName) {
+                if (err) {
+                  console.log('ERROR: ' + err.message);
+                  return res.json({error: app.errorCodes.internalServerError});
+                }
+                return res.json({imageUrl: createPublicUrl(fileName)});
+              });
             });
-          } else if (resizeW && resizeH) {
-            resizeImage(srcPath, resizeW, resizeH, function (err, fileName, filePath) {
-              if (err) {
-                console.log('ERROR: ' + err.message);
-                return res.json({error: app.errorCodes.internalServerError});
-              }
-              return res.json({imageUrl: createPublicUrl(fileName)}); 
-            });
-          } else {
-            saveFile(srcPath, function (err, fileName) {
-              if (err) {
-                console.log('ERROR: ' + err.message);
-                return res.json({error: app.errorCodes.internalServerError});
-              }
-              return res.json({imageUrl: createPublicUrl(fileName)});
-            });
-          }
+            return res.json({imageUrl: createPublicUrl(fileName)}); 
+          });
+
         } else {
           return res.json({error: app.errorCodes.badRequest});
         }
