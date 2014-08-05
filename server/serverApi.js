@@ -23,7 +23,7 @@ module.exports = function (app) {
   function saveFile (src, callback) {
     var fileName = createUniqFileName(src),
       is = fs.createReadStream(src),
-      os = fs.createWriteStream(createLocalPath(fileName))
+      os = fs.createWriteStream(createLocalPath(fileName));
     is.pipe(os);
     is.on('end', function (err) {
       if (fs.existsSync(src)) {
@@ -38,7 +38,7 @@ module.exports = function (app) {
   };
 
   function resizeImage (srcPath, width, height, callback) {
-    if (width && height) {
+    if (width || height) {
       gm(srcPath)
       .resize(width, height)
       .write(srcPath, function (err) {
@@ -55,7 +55,7 @@ module.exports = function (app) {
   };
 
   function cropImage (srcPath, width, height, cropX, cropY, callback) {
-    if (width && height) {
+    if (width || height) {
       if (!cropX) {
         cropX = 0;
       }
@@ -98,16 +98,15 @@ module.exports = function (app) {
       if (req.files.length > 0) {
         var image = req.files[0],
           imageTypeRegex = /image\/\w+/;
-          console.log(req.body);
         if ( imageTypeRegex.test(image.type) ) {
           var 
             srcPath = image.path,
-            cropW = req.body.cropW,
-            cropH = req.body.cropH,
-            cropX = req.body.cropX,
-            cropY = req.body.cropY,
-            resizeW = req.body.resizeW,
-            resizeH = req.body.resizeH,
+            cropW = req.body.cropW || null,
+            cropH = req.body.cropH || null,
+            cropX = req.body.cropX || null,
+            cropY = req.body.cropY || null,
+            resizeW = req.body.resizeW || null,
+            resizeH = req.body.resizeH || null,
             quality = req.body.quality || app.get('quality');
 
           resizeImage(srcPath, resizeW, resizeH, function (err) {
@@ -128,7 +127,6 @@ module.exports = function (app) {
                 return res.json({imageUrl: createPublicUrl(fileName)});
               });
             });
-            return res.json({imageUrl: createPublicUrl(fileName)}); 
           });
 
         } else {
