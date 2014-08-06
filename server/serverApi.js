@@ -6,10 +6,23 @@ module.exports = function (app) {
 
   function createUniqFileName (srcPath) {
     var 
-      now = new Date(),
-      fileName = srcPath.substring(srcPath.lastIndexOf('/') + 1, srcPath.lastIndexOf('.')),
-      extension = srcPath.substr(srcPath.lastIndexOf('.') + 1);
-    return fileName + '_' + hat() + '.' + extension;
+      extensionIndex = srcPath.lastIndexOf('.'),
+      fileName = srcPath.substr(srcPath.lastIndexOf('/')),
+      extension = '',
+      result = '';
+
+    if (extensionIndex > 0) {
+      extension += srcPath.substring(extensionIndex + 1);
+      fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+    }
+
+    result = fileName + '_' + hat();
+
+    if (extension) {
+      result += '.' + extension;
+    }
+
+    return result;
   };
 
   function createLocalPath (fileName) {
@@ -48,7 +61,7 @@ module.exports = function (app) {
           var sourceWidth = values.width,
             sourceHeight = values.height,
             options = "";
-            
+
           if (!height) {
             if (width > sourceWidth) {
               options = "^";
