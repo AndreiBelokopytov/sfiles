@@ -39,13 +39,36 @@ module.exports = function (app) {
 
   function resizeImage (srcPath, width, height, callback) {
     if (width || height) {
-      gm(srcPath)
-      .resize(width, height)
-      .write(srcPath, function (err) {
-        if (err) {
+      var image = gm(srcPath);
+
+      image.size(function (error, values) {
+        if (error) {
           callback(err);
         } else {
-          callback(null);
+          var sourceWidth = values.width,
+            sourceHeight = values.height,
+            options = "";
+            
+          if (!height) {
+            if (width > sourceWidth) {
+              options = "^";
+            }
+            image.resize(width, null, options);
+          } else if (!width) {
+            if (height > sourceHeight) {
+              options = "^";
+            }
+            image.resize(null, height, options);
+          } else {
+            image.resize(width, height, "!");
+          }
+          image.write(srcPath, function (err) {
+            if (err) {
+              callback(err);
+            } else {
+              callback(null);
+            }
+          });
         }
       });
     } else {
@@ -55,7 +78,7 @@ module.exports = function (app) {
   };
 
   function cropImage (srcPath, width, height, cropX, cropY, callback) {
-    if (width || height) {
+    if (width && height) {
       if (!cropX) {
         cropX = 0;
       }
