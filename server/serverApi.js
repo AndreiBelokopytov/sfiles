@@ -56,7 +56,7 @@ module.exports = function (app) {
 
       image.size(function (error, values) {
         if (error) {
-          callback(err);
+          callback(error);
         } else {
           var sourceWidth = values.width,
             sourceHeight = values.height,
