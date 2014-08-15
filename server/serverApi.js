@@ -7,7 +7,7 @@ module.exports = function (app) {
   function createUniqFileName (srcPath) {
     var 
       extensionIndex = srcPath.lastIndexOf('.'),
-      fileName = srcPath.substr(srcPath.lastIndexOf('/')),
+      fileName = srcPath.substr(srcPath.lastIndexOf('/') + 1),
       extension = '',
       result = '';
 
